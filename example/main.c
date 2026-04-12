@@ -34,12 +34,14 @@
 
 #include "uart.h"
 
+// cppcheck-suppress misra-c2012-21.6
 #include <stdio.h>
 #include <string.h>
 
 #ifdef WIN32
 #include <windows.h>
 #elif _POSIX_C_SOURCE >= 199309L
+// cppcheck-suppress misra-c2012-21.10
 #include <time.h> // for nanosleep
 #else
 #include <unistd.h> // for usleep
@@ -47,7 +49,7 @@
 
 static cli_t cli;
 
-void sleep_ms(int milliseconds) // cross-platform sleep function
+static void sleep_ms(int milliseconds) // cross-platform sleep function
 {
 #ifdef WIN32
   Sleep(milliseconds);
@@ -61,7 +63,8 @@ void sleep_ms(int milliseconds) // cross-platform sleep function
 #endif
 }
 
-void uart_rx_callback(char ch) {
+static void uart_rx_callback(char ch) {
+  // cppcheck-suppress misra-c2012-17.3
   if (cli_putchar(&cli, ch) != ch) {
     ; // could not write. buffer full
   }
@@ -69,13 +72,15 @@ void uart_rx_callback(char ch) {
 
 // Wrapper function to adapt uart_putchar to cli.write signature
 static size_t uart_write_wrapper(const void *ptr, size_t size) {
-  const char *p = (const char *)ptr;
-  size_t written = 0;
-  for (size_t i = 0; i < size; i++) {
-    if (uart_putchar(p[i]) == EOF) {
-      break;
+  // cppcheck-suppress misra-c2012-11.5 ; Generic buffer treated as bytes
+  const uint8_t *const p = (const uint8_t *)ptr;
+  size_t written = 0U;
+  for (size_t i = 0U; (i < size) && (written == i); i++) {
+    if (uart_putchar(p[i]) != EOF) {
+      written++;
+    } else {
+      ;
     }
-    written++;
   }
   return written;
 }

@@ -41,8 +41,9 @@ jobs:
 
     - name: Run Cppcheck
       run: |
-        mkdir -p .cppcheck_analysis
-        cppcheck --project=compile_commands.json $(grep -vE '^#|^\[|^$' cppcheck.args)
+        mkdir -p cppcheck/.analysis
+        ln -s bazel-out/../../../external external
+        cppcheck $(grep -vE '^#|^\[|^$' cppcheck/args.txt)
 
 
     # Removed the separate 'Test' step as 'bazel coverage' runs tests.

@@ -29,12 +29,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _CLI_H
-#define _CLI_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include "ringbuffer.h"
 
@@ -42,28 +37,32 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef CLI_PROMPT
 #define CLI_PROMPT "ucli" /**< Command prompot default string*/
 #endif
 
 #ifndef CLI_IN_BUF_MAX
-#define CLI_IN_BUF_MAX (128) /**< Input receive buffer max length*/
+#define CLI_IN_BUF_MAX (128U) /**< Input receive buffer max length*/
 #endif
 
 #ifndef CLI_LINE_MAX
-#define CLI_LINE_MAX (64) /**< Command line max length*/
+#define CLI_LINE_MAX (64U) /**< Command line max length*/
 #endif
 
 #ifndef CLI_ARGV_NUM
-#define CLI_ARGV_NUM (8) /**< Command arguments max  length*/
+#define CLI_ARGV_NUM (8U) /**< Command arguments max  length*/
 #endif
 
 #ifndef CLI_HISTORY_NUM
-#define CLI_HISTORY_NUM (8) /**< Number of commands to keep in history */
+#define CLI_HISTORY_NUM (8U) /**< Number of commands to keep in history */
 #endif
 
 #ifndef ARRAY_SIZE
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+#define ARRAY_SIZE(array) (sizeof((array)) / sizeof((array)[0]))
 #endif
 
 /**
@@ -202,5 +201,3 @@ void cli_init(cli_t *cli, const cli_cmd_list_t *cmd_list);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _CLI_H */

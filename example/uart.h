@@ -29,17 +29,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef UART_H
-#define UART_H
+#pragma once
 
-int uart_putchar(int);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int uart_putchar(int ch);
 
 int uart_getchar(void);
 
 int uart_flush(void);
 
-void uart_register_rx_callback(void (*)(char));
+void uart_register_rx_callback(void (*cb)(char));
 
 void uart_init(void);
 
-#endif /*UART_H*/
+#ifdef __cplusplus
+}
+#endif

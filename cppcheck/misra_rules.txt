@@ -1,0 +1,32 @@
+Appendix A Summary of guidelines
+
+Rule 1.1 The program shall contain no violations of the standard C syntax and constraints, and shall not exceed the implementation's translation limits.
+Rule 2.7 A function should not contain unused parameters.
+Rule 8.1 Types shall be explicitly specified.
+Rule 8.2 Function types shall be in prototype form with named parameters.
+Rule 8.4 A compatible declaration shall be visible when an object or function with external linkage is defined.
+Rule 8.9 An object should be declared at block scope if its identifier only appears in a single function.
+Rule 8.10 An inline function shall be declared with the static storage class.
+Rule 8.14 The restrict type qualifier shall not be used.
+Rule 9.2 The initializer for an aggregate or union shall be enclosed in braces.
+Rule 9.3 Arrays shall not be partially initialized.
+Rule 10.1 Operands shall not be of an inappropriate essential type.
+Rule 10.6 The value of a composite expression shall not be assigned to an object with wider essential type.
+Rule 10.8 The value of a composite expression shall not be cast to a different essential type category or a wider essential type.
+Rule 11.1 Conversions shall not be performed between a pointer to a function and any other type.
+Rule 11.5 A conversion should not be performed from pointer to void into pointer to object.
+Rule 13.4 The result of an assignment operator should not be used.
+Rule 14.4 The controlling expression of an if statement or a iteration-statement shall have essentially Boolean type.
+Rule 15.1 The goto statement should not be used.
+Rule 15.5 A function shall have a single point of exit at the end.
+Rule 15.7 All if...else if constructs shall be terminated with an else statement.
+Rule 16.6 Every switch statement shall have at least two switch-clauses.
+Rule 16.7 A switch-expression shall not have essentially Boolean type.
+Rule 17.3 A function shall not be declared implicitly.
+Rule 17.7 The value returned by a function having non-void return type shall be used.
+Rule 18.3 The relational operators shall not be applied to objects of pointer type except where they point into the same object.
+Rule 18.4 The +, -, += and -= operators shall not be applied to an expression of pointer type.
+Rule 20.1 #include directives should only be preceded by other preprocessor directives or comments.
+Rule 21.3 The memory allocation and deallocation functions of <stdlib.h> shall not be used.
+Rule 21.6 The Standard Library input/output functions shall not be used.
+Rule 21.10 The Standard Library time and date functions shall not be used.

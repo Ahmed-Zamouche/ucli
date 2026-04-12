@@ -1,6 +1,6 @@
 {
     "script": "misra.py",
     "args": [
-        "--rule-texts=misra_rules.txt"
+        "-t=./cppcheck/misra_rules.txt"
     ]
 }

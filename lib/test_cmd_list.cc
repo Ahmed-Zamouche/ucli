@@ -8,7 +8,7 @@ struct output_buffer {
 
 class TestCli : public ::testing::Test {
 protected:
-  void SetUp() override {
+  void SetUp(void) override {
     cli_init(&_cli, NULL);
     _cli.write = TestCli::write;
     _cli.flush = TestCli::flush;
@@ -18,11 +18,11 @@ protected:
   }
   // void TearDown() override {}
   static void clear_output_buffer(output_buffer &output) {
-    memset(output.data, 0, sizeof(output.data));
+    (void)memset(output.data, 0, sizeof(output.data));
     output.offset = 0;
   }
   static size_t write(const void *ptr, size_t size) {
-    char *s = (char *)ptr;
+    const char *s = static_cast<const char *>(ptr);
 
     for (size_t i = 0; i < size; i++) {
       _output_buffer.data[_output_buffer.offset + i] = s[i];
@@ -60,7 +60,7 @@ public:
   }
 
 protected:
-  cli_t _cli;
+  cli_t _cli{};
   static int _quit_flag;
   static int _handler_flag;
   static output_buffer _output_buffer;
@@ -69,68 +69,7 @@ output_buffer TestCli::_output_buffer{};
 int TestCli::_quit_flag;
 int TestCli::_handler_flag;
 
-const cli_cmd_t cli_cmd_mcu_list[] = {
-
-    {
-        .name = "reset",
-        .desc = "[NUM]. Reset the mcu after NUM seconds",
-        .handler = TestCli::cmd_handler,
-    },
-    {
-        .name = "sleep",
-        .desc = "[NUM]. Put mcu in sleep mode for NUM seconds",
-        .handler = TestCli::cmd_handler,
-    },
-
-};
-
-const cli_cmd_group_t cli_cmd_mcu_group = {
-    .name = "mcu", .desc = "MCU group", .cmds = NULL, .length = 0};
-
-const cli_cmd_t cli_cmd_gpio_list[] = {
-    {
-        .name = "input-get",
-        .desc = "NAME. Get gpio input NAME value",
-        .handler = TestCli::cmd_handler,
-    },
-    {
-        .name = "output-get",
-        .desc = "NAME. Get gpio output NAME value",
-        .handler = TestCli::cmd_handler,
-    },
-    {
-        .name = "output-set",
-        .desc = "NAME (0|1). Set gpio output NAME",
-        .handler = TestCli::cmd_handler,
-    },
-};
-
-const cli_cmd_group_t cli_cmd_gpio_group = {
-    .name = "gpio", .desc = "Gpio group", .cmds = NULL, .length = 0};
-
-const cli_cmd_t cli_cmd_adc_list[] = {
-    {
-        .name = "get",
-        .desc = "NAME. Get adc NAME value",
-        .handler = TestCli::cmd_handler,
-    },
-    {
-        .name = "start-conv",
-        .desc = "NAME. Start acd NAME conversion",
-        .handler = TestCli::cmd_handler,
-    },
-};
-
-const cli_cmd_group_t cli_cmd_adc_group = {
-    .name = "adc", .desc = "ADC group", .cmds = NULL, .length = 0};
-
-const cli_cmd_group_t *cli_cmd_group[] = {
-    &cli_cmd_mcu_group,
-    &cli_cmd_gpio_group,
-    &cli_cmd_adc_group,
-};
-
-cli_cmd_list_t cli_cmd_list = {
+static cli_cmd_list_t cli_cmd_list = {
     .groups = NULL,
     .length = 0,
 };
@@ -155,7 +94,9 @@ TEST_F(TestCli, TestBuildinEchoCmd) {
 TEST_F(TestCli, TestBuildinHelpCmd) {
   cli_puts(&_cli, "help\r\n");
   cli_mainloop(&_cli);
-  EXPECT_EQ(memcmp(_output_buffer.data, "help\r\nhelp\t", 11), 0);
+  EXPECT_EQ(strncmp(static_cast<const char *>(_output_buffer.data),
+                    "help\r\nhelp\t", 11),
+            0);
 }
 
 TEST_F(TestCli, ClearCmd) {
@@ -164,7 +105,11 @@ TEST_F(TestCli, ClearCmd) {
 
   // Check if the ANSI escape sequence for clearing screen was sent
   // Look for "\x1b[2J\x1b[H" in _output_buffer.data
-  const char *clear_seq = "\x1b[2J\x1b[H";
+  const char *clear_seq =
+      "\x1b" // ANSI escape character
+      "[2J"  // Clear entire screen
+      "\x1b" // Move cursor to home position (top-left corner)
+      "[H";  // Move cursor to home position (top-left corner)
   bool found_clear_seq = (strstr(_output_buffer.data, clear_seq) != nullptr);
   EXPECT_TRUE(found_clear_seq);
 }
@@ -176,16 +121,33 @@ TEST_F(TestCli, TestNullCmdGroup) {
 }
 
 static void add_groups(cli_cmd_list_t *cmd_list) {
+
+  static const cli_cmd_group_t cli_cmd_mcu_group = {
+      .name = "mcu", .desc = "MCU group", .cmds = NULL, .length = 0U};
+
+  static const cli_cmd_group_t cli_cmd_gpio_group = {
+      .name = "gpio", .desc = "Gpio group", .cmds = NULL, .length = 0U};
+
+  static const cli_cmd_group_t cli_cmd_adc_group = {
+      .name = "adc", .desc = "ADC group", .cmds = NULL, .length = 0U};
+
+  static const cli_cmd_group_t *cli_cmd_group[3] = {
+      [0] = &cli_cmd_mcu_group,
+      [1] = &cli_cmd_gpio_group,
+      [2] = &cli_cmd_adc_group,
+  };
+
   static cli_cmd_group_t mcu_group = {0};
   static cli_cmd_group_t gpio_group = {0};
   static cli_cmd_group_t adc_group = {0};
 
   // attach the empty groups
-  static cli_cmd_group_t *cmd_group[3] = {&mcu_group, &gpio_group, &adc_group};
+  static cli_cmd_group_t *const cmd_group[3] = {
+      [0] = &mcu_group, [1] = &gpio_group, [2] = &adc_group};
 
-  cmd_list->groups = (const cli_cmd_group_t **)cmd_group;
-  cmd_list->length = 3;
-  for (size_t i = 0; i < 3; i++) {
+  cmd_list->groups = const_cast<const cli_cmd_group_t **>(cmd_group);
+  cmd_list->length = 3U;
+  for (size_t i = 0U; i < 3U; i++) {
     cmd_group[i]->name = cli_cmd_group[i]->name;
     cmd_group[i]->desc = cli_cmd_group[i]->desc;
   }
@@ -198,34 +160,91 @@ static void add_commands(const cli_cmd_t *cmd_list, size_t cmds_size,
 }
 
 static void add_adc_commands(cli_cmd_group_t **cmd_group,
-                             int(handler)(cli_t *, int, char **)) {
-  static cli_cmd_t cmd_adc_list[ARRAY_SIZE(cli_cmd_adc_list)] = {};
-  for (size_t i = 0; i < ARRAY_SIZE(cli_cmd_adc_list); i++) {
+                             cli_cmd_handler_t handler) {
+
+  static const cli_cmd_t cli_cmd_adc_list[2] = {
+      [0] =
+          {
+              .name = "get",
+              .desc = "NAME. Get adc NAME value",
+              .handler = TestCli::cmd_handler,
+          },
+      [1] =
+          {
+              .name = "start-conv",
+              .desc = "NAME. Start acd NAME conversion",
+              .handler = TestCli::cmd_handler,
+          },
+  };
+
+  static cli_cmd_t cmd_adc_list[ARRAY_SIZE(cli_cmd_adc_list)] = {0};
+  for (size_t i = 0U; i < ARRAY_SIZE(cli_cmd_adc_list); i++) {
     cmd_adc_list[i].name = cli_cmd_adc_list[i].name;
     cmd_adc_list[i].desc = cli_cmd_adc_list[i].desc;
-    cmd_adc_list[i].handler = handler;
+    cmd_adc_list[i].handler = static_cast<cli_cmd_handler_t>(handler);
   }
-  add_commands(cmd_adc_list, ARRAY_SIZE(cli_cmd_adc_list), cmd_group, 2);
+  add_commands(cmd_adc_list, ARRAY_SIZE(cli_cmd_adc_list), cmd_group, 2U);
 }
+
 static void add_gpio_commands(cli_cmd_group_t **cmd_group,
-                              int(handler)(cli_t *, int, char **)) {
-  static cli_cmd_t cmd_gpio_list[ARRAY_SIZE(cli_cmd_gpio_list)] = {};
-  for (size_t i = 0; i < ARRAY_SIZE(cli_cmd_gpio_list); i++) {
+                              cli_cmd_handler_t handler) {
+
+  static const cli_cmd_t cli_cmd_gpio_list[3] = {
+      [0] =
+          {
+              .name = "input-get",
+              .desc = "NAME. Get gpio input NAME value",
+              .handler = TestCli::cmd_handler,
+          },
+      [1] =
+          {
+              .name = "output-get",
+              .desc = "NAME. Get gpio output NAME value",
+              .handler = TestCli::cmd_handler,
+          },
+      [2] =
+          {
+              .name = "output-set",
+              .desc = "NAME (0|1). Set gpio output NAME",
+              .handler = TestCli::cmd_handler,
+          },
+  };
+
+  static cli_cmd_t cmd_gpio_list[ARRAY_SIZE(cli_cmd_gpio_list)] = {0};
+  for (size_t i = 0U; i < ARRAY_SIZE(cli_cmd_gpio_list); i++) {
     cmd_gpio_list[i].name = cli_cmd_gpio_list[i].name;
     cmd_gpio_list[i].desc = cli_cmd_gpio_list[i].desc;
-    cmd_gpio_list[i].handler = handler;
+    cmd_gpio_list[i].handler = static_cast<cli_cmd_handler_t>(handler);
   }
-  add_commands(cmd_gpio_list, ARRAY_SIZE(cli_cmd_gpio_list), cmd_group, 1);
+  add_commands(cmd_gpio_list, ARRAY_SIZE(cli_cmd_gpio_list), cmd_group, 1U);
 }
+
 static void add_mcu_commands(cli_cmd_group_t **cmd_group,
-                             int(handler)(cli_t *, int, char **)) {
-  static cli_cmd_t cmd_mcu_list[ARRAY_SIZE(cli_cmd_mcu_list)];
-  for (size_t i = 0; i < ARRAY_SIZE(cli_cmd_mcu_list); i++) {
+                             cli_cmd_handler_t handler) {
+
+  static const cli_cmd_t cli_cmd_mcu_list[2] = {
+      [0] =
+          {
+              .name = "reset",
+              .desc = "[NUM]. Reset the mcu after NUM seconds",
+              .handler = TestCli::cmd_handler,
+          },
+      [1] =
+          {
+              .name = "sleep",
+              .desc = "[NUM]. Put mcu in sleep mode for NUM seconds",
+              .handler = TestCli::cmd_handler,
+          },
+
+  };
+
+  static cli_cmd_t cmd_mcu_list[ARRAY_SIZE(cli_cmd_mcu_list)] = {0};
+  for (size_t i = 0U; i < ARRAY_SIZE(cli_cmd_mcu_list); i++) {
     cmd_mcu_list[i].name = cli_cmd_mcu_list[i].name;
     cmd_mcu_list[i].desc = cli_cmd_mcu_list[i].desc;
-    cmd_mcu_list[i].handler = handler;
+    cmd_mcu_list[i].handler = static_cast<cli_cmd_handler_t>(handler);
   }
-  add_commands(cmd_mcu_list, ARRAY_SIZE(cli_cmd_mcu_list), cmd_group, 0);
+  add_commands(cmd_mcu_list, ARRAY_SIZE(cli_cmd_mcu_list), cmd_group, 0U);
 }
 
 TEST_F(TestCli, TestNullCmdGroups) {
@@ -246,9 +265,15 @@ TEST_F(TestCli, TestMcuCmdGroup) {
   _cli.cmd_list = cmd_list;
 
   add_groups(cmd_list);
-  add_mcu_commands((cli_cmd_group_t **)cmd_list->groups, NULL);
-  add_gpio_commands((cli_cmd_group_t **)cmd_list->groups, NULL);
-  add_adc_commands((cli_cmd_group_t **)cmd_list->groups, NULL);
+  add_mcu_commands(reinterpret_cast<cli_cmd_group_t **>(
+                       const_cast<cli_cmd_group_t **>(cmd_list->groups)),
+                   NULL);
+  add_gpio_commands(reinterpret_cast<cli_cmd_group_t **>(
+                        const_cast<cli_cmd_group_t **>(cmd_list->groups)),
+                    NULL);
+  add_adc_commands(reinterpret_cast<cli_cmd_group_t **>(
+                       const_cast<cli_cmd_group_t **>(cmd_list->groups)),
+                   NULL);
   // 2.1.1 Test default handler
   _handler_flag = 0;
   cli_puts(&_cli, "mcu reset\r\n");
@@ -256,9 +281,12 @@ TEST_F(TestCli, TestMcuCmdGroup) {
   EXPECT_EQ(_handler_flag, 0);
 
   // 2.1.1 Test handler
-  add_mcu_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
-  add_gpio_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
-  add_adc_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
+  add_mcu_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                   TestCli::cmd_handler);
+  add_gpio_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                    TestCli::cmd_handler);
+  add_adc_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                   TestCli::cmd_handler);
   _handler_flag = 0;
   cli_puts(&_cli, "mcu reset\r\n");
   cli_mainloop(&_cli);
@@ -271,9 +299,12 @@ TEST_F(TestCli, TestLimits) {
   _cli.cmd_list = cmd_list;
 
   add_groups(cmd_list);
-  add_mcu_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
-  add_gpio_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
-  add_adc_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
+  add_mcu_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                   TestCli::cmd_handler);
+  add_gpio_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                    TestCli::cmd_handler);
+  add_adc_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                   TestCli::cmd_handler);
 
   _handler_flag = 0;
   cli_puts(&_cli, "\r\n");
@@ -283,33 +314,35 @@ TEST_F(TestCli, TestLimits) {
   // 3.2 Test argv max limit
 
   {
-    char buf[CLI_LINE_MAX * 2] = {0};
+    char buf[CLI_LINE_MAX * 2U] = {0};
     int n = 0;
-    n += snprintf(buf + n, sizeof(buf) - n, "mcu reset");
-    for (size_t i = 0; i < (CLI_ARGV_NUM - 2) + 1; i++) {
-      n += snprintf(buf + n, sizeof(buf) - n, " arg%ld", i);
+    n += snprintf(&buf[n], sizeof(buf) - static_cast<size_t>(n), "mcu reset");
+    for (size_t i = 0; i < (CLI_ARGV_NUM - 2U) + 1U; i++) {
+      n +=
+          snprintf(&buf[n], sizeof(buf) - static_cast<size_t>(n), " arg%zu", i);
     }
-    n += snprintf(buf + n, sizeof(buf) - n, "\r\n");
+    n += snprintf(&buf[n], sizeof(buf) - static_cast<size_t>(n), "\r\n");
     _handler_flag = 0;
 
     cli_puts(&_cli, buf);
     clear_output_buffer(_output_buffer);
     cli_mainloop(&_cli);
     EXPECT_EQ(_handler_flag, 0);
-    EXPECT_EQ(strcmp(_output_buffer.data + strlen(buf),
+    EXPECT_EQ(strcmp(&_output_buffer.data[strlen(buf)],
                      "Error: The number of arguments exceeds maximum of "
                      "CLI_ARGV_NUM\r\n" CLI_PROMPT "> "),
               0);
   }
 
   {
-    char buf[CLI_LINE_MAX * 2] = {0};
+    char buf[CLI_LINE_MAX * 2U] = {0};
     int n = 0;
-    n += snprintf(buf + n, sizeof(buf) - n, "mcu reset");
-    for (size_t i = 0; i < (CLI_ARGV_NUM - 2); i++) {
-      n += snprintf(buf + n, sizeof(buf) - n, " arg%ld", i);
+    n += snprintf(&buf[n], sizeof(buf) - static_cast<size_t>(n), "mcu reset");
+    for (size_t i = 0; i < (CLI_ARGV_NUM - 2U); i++) {
+      n +=
+          snprintf(&buf[n], sizeof(buf) - static_cast<size_t>(n), " arg%zu", i);
     }
-    n += snprintf(buf + n, sizeof(buf) - n, "\r\n");
+    n += snprintf(&buf[n], sizeof(buf) - static_cast<size_t>(n), "\r\n");
 
     _handler_flag = 0;
     cli_puts(&_cli, buf);
@@ -320,10 +353,10 @@ TEST_F(TestCli, TestLimits) {
 
   // 3.2 Test line max limit
   {
-    char buf[CLI_LINE_MAX * 2] = {0};
+    char buf[CLI_LINE_MAX * 2U] = {0};
     int n = 0;
     n += snprintf(
-        buf + n, sizeof(buf) - n,
+        &buf[n], sizeof(buf) - static_cast<size_t>(n),
         "mcu reset "
         "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\r\n");
     _handler_flag = 0;
@@ -343,9 +376,12 @@ TEST_F(TestCli, TestCaseInsensitivity) {
   _cli.cmd_list = cmd_list;
 
   add_groups(cmd_list);
-  add_mcu_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
-  add_gpio_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
-  add_adc_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
+  add_mcu_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                   TestCli::cmd_handler);
+  add_gpio_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                    TestCli::cmd_handler);
+  add_adc_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                   TestCli::cmd_handler);
 
   // Test case-insensitive command matching with mixed-case arguments
   _handler_flag = 0;
@@ -422,7 +458,8 @@ TEST_F(TestCli, TestGroupedAndTopLevelCommands) {
   _cli.cmd_list = cmd_list;
 
   add_groups(cmd_list);
-  add_mcu_commands((cli_cmd_group_t **)cmd_list->groups, TestCli::cmd_handler);
+  add_mcu_commands(const_cast<cli_cmd_group_t **>(cmd_list->groups),
+                   TestCli::cmd_handler);
 
   // Test top-level
   _handler_flag = 0;

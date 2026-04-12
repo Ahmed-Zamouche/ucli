@@ -29,14 +29,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef _TEST_CMD_LIST_H
-#define _TEST_CMD_LIST_H
+#pragma once
+
+#include "lib/cli.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "lib/cli.h"
 
 extern volatile int TEST_cmd_handler_flag;
 
@@ -50,5 +49,3 @@ extern cli_cmd_list_t TEST_cli_cmd_list;
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _TEST_CMD_LIST_H */

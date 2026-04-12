@@ -1,0 +1,12 @@
+--enable=all
+--error-exitcode=1
+--inline-suppr
+--addon=cppcheck/misra.json
+--project=compile_commands.json
+--cppcheck-build-dir=cppcheck/.analysis
+--suppressions-list=cppcheck/suppressions.txt
+-I ./
+-I /home/ahmzam/workdir/projects/cli
+--library=std
+-i external/
+#--quiet

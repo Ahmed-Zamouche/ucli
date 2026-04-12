@@ -14,4 +14,4 @@ project-cppcheck-*/
 /.cache/
 .aider*
 coverage_report/
-.cppcheck_analysis/
+cppcheck/.analysis/

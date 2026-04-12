@@ -1,9 +1,0 @@
---enable=all
---addon=misra
---suppress=missingIncludeSystem
---suppress=*:external/+http_archive+googletest/*
---suppress=*:*external/*
---cppcheck-build-dir=.cppcheck_analysis
--i external/
--i bazel-out/
--i external/+http_archive+googletest/googletest/

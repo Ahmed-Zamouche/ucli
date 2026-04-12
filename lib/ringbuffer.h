@@ -29,16 +29,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#ifndef UTILS_RINGBUFFER_RINGBUFFER_H_
-#define UTILS_RINGBUFFER_RINGBUFFER_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct ringbuffer_s {
   uint8_t *buffer;
@@ -47,24 +46,22 @@ typedef struct ringbuffer_s {
   size_t capacity;
 } ringbuffer_t;
 
-bool ringbuffer_is_empty(const ringbuffer_t *const);
+bool ringbuffer_is_empty(const ringbuffer_t *const rb);
 
-bool ringbuffer_is_full(const ringbuffer_t *const);
+bool ringbuffer_is_full(const ringbuffer_t *const rb);
 
-size_t ringbuffer_size(const ringbuffer_t *const);
+size_t ringbuffer_size(const ringbuffer_t *const rb);
 
-size_t ringbuffer_capacity(const ringbuffer_t *const);
+size_t ringbuffer_capacity(const ringbuffer_t *const rb);
 
-int ringbuffer_put(ringbuffer_t *, uint8_t);
+int ringbuffer_put(ringbuffer_t *rb, uint8_t data);
 
-int ringbuffer_get(ringbuffer_t *, uint8_t *);
+int ringbuffer_get(ringbuffer_t *rb, uint8_t *data);
 
-int ringbuffer_peek(ringbuffer_t *, uint8_t *);
+int ringbuffer_peek(ringbuffer_t *rb, uint8_t *data);
 
-void ringbuffer_wrap(ringbuffer_t *, uint8_t *buffer, size_t capacity);
+void ringbuffer_wrap(ringbuffer_t *rb, uint8_t *buffer, size_t capacity);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif // UTILS_RINGBUFFER_RINGBUFFER_H_
