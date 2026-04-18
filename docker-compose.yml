@@ -1,9 +1,15 @@
 services:
   dev:
+    # This is the 'remote' name and the 'local' name
+    image: ghcr.io/ahmed-zamouche/ucli:latest
+
+    # This allows you to build locally
     build:
       context: .
       dockerfile: .devcontainer/Dockerfile
+
+    privileged: true
     volumes:
-      - /home/ahmzam/workdir/projects/cli:/home/ahmzam/workdir/projects/cli
-    working_dir: /home/ahmzam/workdir/projects/cli
+      - .:/workspace/cli
+    working_dir: /workspace/cli
     command: tail -f /dev/null

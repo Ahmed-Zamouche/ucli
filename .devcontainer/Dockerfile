@@ -18,4 +18,4 @@ RUN mv bazelisk-linux-amd64 /usr/local/bin/bazel
 RUN chmod +x /usr/local/bin/bazel
 
 
-WORKDIR /home/ahmzam/workdir/projects/cli
+WORKDIR /workspace/cli
