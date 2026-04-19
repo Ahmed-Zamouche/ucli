@@ -42,7 +42,7 @@ jobs:
     - name: Run Cppcheck
       run: |
         mkdir -p cppcheck/.analysis
-        ln -s bazel-out/../../../external external
+        # ln -s bazel-out/../../../external external
         cppcheck $(grep -vE '^#|^\[|^$' cppcheck/args.txt)
 
 
